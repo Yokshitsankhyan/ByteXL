@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Live Character Counter</title>
+  <style>
+    :root {
+      --max: 150; /* 🔧 change this to set your max characters */
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin: 32px;
+      background: #f7f7fb;
+      color: #121212;
+    }
+    .card {
+      max-width: 720px;
+      margin-inline: auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+      padding: 20px;
+    }
+    h1 {
+      font-size: 1.25rem;
+      margin: 0 0 12px;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    label {
+      font-weight: 600;
+    }
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      resize: vertical;
+      padding: 12px 14px;
+      border: 1px solid #d7d7e0;
+      border-radius: 10px;
+      outline: none;
+      font: inherit;
+      line-height: 1.5;
+      transition: border-color 0.15s ease;
+      background: #fafafe;
+    }
+    textarea:focus { border-color: #6366f1; background: #fff; }
+    .counts {
+      display: flex;
+      gap: 12px;
+      align-items: baseline;
+      font-size: 0.95rem;
+    }
+    .counts .strong { font-weight: 700; }
+    .progress-wrap {
+      width: 100%;
+      height: 10px;
+      background: #eee;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 8px 0 2px;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: #6366f1; /* changes to orange/red as you approach the limit */
+      transition: width 0.1s linear, background-color 0.2s ease;
+    }
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .hint {
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    button {
+      border: 0;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: #111827;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:active { transform: translateY(1px); }
+    @media (max-width: 520px) {
+      .footer-row { flex-direction: column; align-items: stretch; }
+      button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card" role="region" aria-labelledby="title">
+    <h1 id="title">Live Character Counter</h1>
+
+    <div class="row" style="margin-bottom:6px">
+      <label for="message">Your message (max <span id="maxLabel"></span> chars):</label>
+      <div class="counts" aria-live="polite" aria-atomic="true">
+        <span>Typed: <span id="typed" class="strong">0</span></span>
+        <span>•</span>
+        <span>Remaining: <span id="remaining" class="strong">150</span></span>
+      </div>
+    </div>
+
+    <textarea id="message"
+              placeholder="Start typing…"
+              maxlength="150"
+              aria-describedby="counterHint"></textarea>
+
+    <div class="progress-wrap" aria-hidden="true">
+      <div id="bar" class="progress-bar"></div>
+    </div>
+
+    <div class="footer-row">
+      <div id="counterHint" class="hint">Counter updates live and prevents typing past the limit.</div>
+      <button type="button" id="clearBtn">Clear</button>
+    </div>
+  </div>
+
+  <script>
+    // === Config (kept in sync with the DOM automatically) ===
+    const textarea = document.getElementById('message');
+    const typedEl = document.getElementById('typed');
+    const remainingEl = document.getElementById('remaining');
+    const bar = document.getElementById('bar');
+    const maxLabel = document.getElementById('maxLabel');
+    const clearBtn = document.getElementById('clearBtn');
+
+    // Initialize max from the textarea's maxlength attribute
+    const getMax = () => Number(textarea.getAttribute('maxlength')) || 0;
+
+    function updateUI() {
+      const max = getMax();
+      const len = textarea.value.length;
+
+      // Update text counters
+      typedEl.textContent = len;
+      remainingEl.textContent = Math.max(0, max - len);
+      maxLabel.textContent = max;
+
+      // Update progress bar
+      const pct = max ? Math.min(100, (len / max) * 100) : 0;
+      bar.style.width = pct + '%';
+
+      // Friendly color transitions: blue -> orange -> red near the limit
+      let color = '#6366f1';
+      if (pct >= 80 && pct < 95) color = '#fb923c';
+      if (pct >= 95) color = '#ef4444';
+      bar.style.backgroundColor = color;
+    }
+
+    // Keep UI synced on any input (typing, paste, drag-drop, voice, etc.)
+    textarea.addEventListener('input', updateUI);
+
+    // Clear button
+    clearBtn.addEventListener('click', () => {
+      textarea.value = '';
+      textarea.focus();
+      updateUI();
+    });
+
+    // First render
+    updateUI();
+  </script>
+</body>
+</html>
